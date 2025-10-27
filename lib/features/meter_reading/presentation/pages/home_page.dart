@@ -10,6 +10,9 @@ import '../bloc/meter_reading_event.dart';
 import '../bloc/meter_reading_state.dart';  
 import 'qr_scanner_page.dart';
 import 'settings_page.dart';
+import 'tenant_details_page.dart';
+import 'camera_capture_page.dart';
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -224,15 +227,17 @@ class _HomePageState extends State<HomePage> {
                             margin: const EdgeInsets.only(bottom: 12),
                             child: InkWell(
                               onTap: () {
-                                // TODO: Navigate to tenant details
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      'View details for ${tenant.name}',
-                                    ),
-                                  ),
-                                );
-                              },
+                              // Navigate to Tenant Details Page
+                              Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => TenantDetailsPage(
+                                  tenant: tenant,
+                                  //meter: meter,
+                                ),
+                                ),
+                              );
+                            },
                               borderRadius: BorderRadius.circular(16),
                               child: Padding(
                                 padding: const EdgeInsets.all(16),

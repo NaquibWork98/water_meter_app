@@ -7,6 +7,7 @@ class Tenant extends Equatable {
   final String location;
   final String? phoneNumber;
   final String? meterId;
+  final String status;
 
   const Tenant({
     required this.id,
@@ -15,6 +16,7 @@ class Tenant extends Equatable {
     required this.location,
     this.phoneNumber,
     this.meterId,
+    required this.status,
   });
 
   @override

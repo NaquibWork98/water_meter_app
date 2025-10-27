@@ -8,6 +8,7 @@ class TenantModel extends Tenant {
     required super.location,
     super.phoneNumber,
     super.meterId,
+    required super.status,
   });
 
   factory TenantModel.fromJson(Map<String, dynamic> json) {
@@ -18,6 +19,7 @@ class TenantModel extends Tenant {
       location: json['location'] as String,
       phoneNumber: json['phone_number'] as String?,
       meterId: json['meter_id'] as String?,
+      status: json['status'] as String? ?? 'Active',
     );
   }
 
@@ -29,6 +31,7 @@ class TenantModel extends Tenant {
       'location': location,
       'phone_number': phoneNumber,
       'meter_id': meterId,
+      'status': status,
     };
   }
 
@@ -40,6 +43,7 @@ class TenantModel extends Tenant {
       location: location,
       phoneNumber: phoneNumber,
       meterId: meterId,
+      status: status,
     );
   }
 }

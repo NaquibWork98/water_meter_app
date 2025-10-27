@@ -138,6 +138,7 @@ class MeterRemoteDataSourceImpl implements MeterRemoteDataSource {
         location: 'Ground Floor 02',
         phoneNumber: '+60123456789',
         meterId: '1',
+        status: 'Active',
       ),
       TenantModel(
         id: '2',
@@ -146,6 +147,7 @@ class MeterRemoteDataSourceImpl implements MeterRemoteDataSource {
         location: 'Level 1, Unit 03',
         phoneNumber: '+60123456788',
         meterId: '2',
+        status: 'Pending',
       ),
       TenantModel(
         id: '3',
@@ -154,6 +156,7 @@ class MeterRemoteDataSourceImpl implements MeterRemoteDataSource {
         location: 'Level 2, Unit 05',
         phoneNumber: '+60123456787',
         meterId: '3',
+        status: 'Overdue',
       ),
     ];
   }
@@ -170,6 +173,7 @@ class MeterRemoteDataSourceImpl implements MeterRemoteDataSource {
       location: 'Ground Floor 02',
       phoneNumber: '+60123456789',
       meterId: '1',
+      status: 'Active',
     );
   }
 }
