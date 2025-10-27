@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/usecases/usecase.dart';
+import '../../../../core/error/failures.dart';
 import '../../domain/usecases/extract_reading_ocr.dart';
 import '../../domain/usecases/get_all_tenants.dart';
 import '../../domain/usecases/get_reading_history.dart';
@@ -46,31 +47,32 @@ class MeterReadingBloc extends Bloc<MeterReadingEvent, MeterReadingState> {
   }
 
   Future<void> _onImageCaptured(
-    ImageCaptured event,
-    Emitter<MeterReadingState> emit,
-  ) async {
-    // Check if we have a meter loaded
-    if (state is! MeterLoaded) {
-      emit(const MeterReadingError('Please scan QR code first'));
-      return;
-    }
+  ImageCaptured event,
+  Emitter<MeterReadingState> emit,
+) async {
+  emit(const MeterReadingLoading(message: 'Extracting reading from image...'));
 
-    final currentMeter = (state as MeterLoaded).meter;
-    emit(const MeterReadingLoading(message: 'Extracting reading...'));
+  final result = await extractReadingOCR(
+    ExtractReadingOCRParams(imagePath: event.imagePath),
+  );
 
-    final result = await extractReadingOCR(
-      ExtractReadingOCRParams(imagePath: event.imagePath),
-    );
-
-    result.fold(
-      (failure) => emit(MeterReadingError(failure.message)),
-      (reading) => emit(ReadingExtracted(
-        meter: currentMeter,
+  result.fold(
+    (failure) {
+      String errorMessage = 'Failed to extract reading';
+      if (failure is OCRFailure) {
+        errorMessage = failure.message;
+      }
+      emit(MeterReadingError(errorMessage));
+    },
+    (reading) {
+      // Simply emit the extracted reading - no meter check needed
+      emit(OCRReadingExtracted(
         extractedReading: reading,
         imagePath: event.imagePath,
-      )),
-    );
-  }
+      ));
+    },
+  );
+}
 
   Future<void> _onReadingManuallyEntered(
     ReadingManuallyEntered event,

@@ -22,7 +22,7 @@ class NetworkFailure extends Failure {
 }
 
 class OCRFailure extends Failure {
-  const OCRFailure(super.message);
+  const OCRFailure([super.message = 'Failed to extract reading from image']);
 }
 
 class CameraFailure extends Failure {

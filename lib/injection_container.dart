@@ -18,6 +18,7 @@ import 'features/authentication/presentation/bloc/auth_bloc.dart';
 // Meter Reading
 import 'features/meter_reading/data/datasources/meter_local_data_source.dart';
 import 'features/meter_reading/data/datasources/meter_remote_data_source.dart';
+import 'features/meter_reading/data/datasources/ocr_data_source.dart';
 import 'features/meter_reading/data/repositories/meter_repository_impl.dart';
 import 'features/meter_reading/domain/repositories/meter_repository.dart';
 import 'features/meter_reading/domain/usecases/extract_reading_ocr.dart';
@@ -66,6 +67,19 @@ Future<void> init() async {
     () => AuthLocalDataSourceImpl(sharedPreferences: sl()),
   );
 
+  // Data sources
+  sl.registerLazySingleton<MeterRemoteDataSource>(
+    () => MeterRemoteDataSourceImpl(client: sl()),
+  );
+
+  sl.registerLazySingleton<MeterLocalDataSource>(
+    () => MeterLocalDataSourceImpl(sharedPreferences: sl()),
+  );
+
+  sl.registerLazySingleton<OCRDataSource>(
+    () => OCRDataSourceImpl(),
+  );
+
   //! ========================================
   //! Features - Meter Reading
   //! ========================================
@@ -88,24 +102,16 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetReadingHistory(sl()));
   sl.registerLazySingleton(() => GetAllTenants(sl()));
 
-  // Repository
+  // Repository - Only OCR data source for now
   sl.registerLazySingleton<MeterRepository>(
     () => MeterRepositoryImpl(
       remoteDataSource: sl(),
       localDataSource: sl(),
       networkInfo: sl(),
+      ocrDataSource: sl(),
     ),
   );
-
-  // Data sources
-  sl.registerLazySingleton<MeterRemoteDataSource>(
-    () => MeterRemoteDataSourceImpl(client: sl()),
-  );
-
-  sl.registerLazySingleton<MeterLocalDataSource>(
-    () => MeterLocalDataSourceImpl(sharedPreferences: sl()),
-  );
-
+  
   //! ========================================
   //! Core
   //! ========================================

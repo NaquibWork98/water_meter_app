@@ -8,17 +8,20 @@ import '../../domain/entities/tenant.dart';
 import '../../domain/repositories/meter_repository.dart';
 import '../datasources/meter_local_data_source.dart';
 import '../datasources/meter_remote_data_source.dart';
+import '../datasources/ocr_data_source.dart'; 
 import '../models/reading_model.dart';
 
 class MeterRepositoryImpl implements MeterRepository {
   final MeterRemoteDataSource remoteDataSource;
   final MeterLocalDataSource localDataSource;
   final NetworkInfo networkInfo;
+  final OCRDataSource ocrDataSource; 
 
   MeterRepositoryImpl({
     required this.remoteDataSource,
     required this.localDataSource,
     required this.networkInfo,
+    required this.ocrDataSource, 
   });
 
   @override
@@ -57,16 +60,9 @@ class MeterRepositoryImpl implements MeterRepository {
   @override
   Future<Either<Failure, String>> extractReadingFromImage(String imagePath) async {
     try {
-      // TODO: Implement OCR logic here when meters arrive
-      // For now, return a mock reading
-      await Future.delayed(const Duration(seconds: 2));
-      
-      // Simulate OCR extraction
-      return const Right('12345.67');
-      
-      // TODO: Real implementation will be:
-      // final reading = await ocrService.extractReading(imagePath);
-      // return Right(reading);
+      // Use the actual OCR data source
+      final reading = await ocrDataSource.extractTextFromImage(imagePath);
+      return Right(reading);
     } on OCRException catch (e) {
       return Left(OCRFailure(e.message));
     } catch (e) {

@@ -5,8 +5,8 @@ import 'package:image_picker/image_picker.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/entities/meter.dart';
 import '../bloc/meter_reading_bloc.dart';
-import '../bloc/meter_reading_event.dart';  // ✅ ADD THIS IMPORT
-import '../bloc/meter_reading_state.dart';  // ✅ ADD THIS IMPORT
+import '../bloc/meter_reading_event.dart';
+import '../bloc/meter_reading_state.dart';  
 import 'reading_confirmation_page.dart';
 
 class CameraCapturePage extends StatefulWidget {
@@ -96,27 +96,27 @@ class _CameraCapturePageState extends State<CameraCapturePage> {
       ),
       body: BlocConsumer<MeterReadingBloc, MeterReadingState>(
         listener: (context, state) {
-          if (state is ReadingExtracted) {
-            // Navigate to confirmation page
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ReadingConfirmationPage(
-                  meter: state.meter,
-                  extractedReading: state.extractedReading,
-                  imagePath: state.imagePath,
-                ),
+        if (state is OCRReadingExtracted) {
+          // Navigate to confirmation page
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ReadingConfirmationPage(
+                meter: widget.meter,
+                extractedReading: state.extractedReading,
+                imagePath: state.imagePath,
               ),
-            );
-          } else if (state is MeterReadingError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: AppTheme.errorRed,
-              ),
-            );
-          }
-        },
+            ),
+          );
+        } else if (state is MeterReadingError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: AppTheme.errorRed,
+            ),
+          );
+        }
+      },
         builder: (context, state) {
           return Column(
             children: [

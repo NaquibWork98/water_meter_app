@@ -49,6 +49,20 @@ class ReadingExtracted extends MeterReadingState {
   List<Object> get props => [meter, extractedReading, imagePath];
 }
 
+// OCR Reading Extracted (before meter is selected)
+class OCRReadingExtracted extends MeterReadingState {
+  final String extractedReading;
+  final String imagePath;
+
+  const OCRReadingExtracted({
+    required this.extractedReading,
+    required this.imagePath,
+  });
+
+  @override
+  List<Object> get props => [extractedReading, imagePath];
+}
+
 // Reading Submitted Successfully
 class ReadingSubmitted extends MeterReadingState {
   final String message;

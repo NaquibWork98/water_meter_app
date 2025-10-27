@@ -16,6 +16,9 @@ class NetworkException implements Exception {
 class OCRException implements Exception {
   final String message;
   OCRException(this.message);
+
+  @override
+  String toString() => 'OCRException: $message';
 }
 
 class AuthException implements Exception {
