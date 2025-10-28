@@ -25,6 +25,10 @@ class OCRFailure extends Failure {
   const OCRFailure([super.message = 'Failed to extract reading from image']);
 }
 
+class ValidationFailure extends Failure {
+  const ValidationFailure([super.message = 'Validation failed']);
+}
+
 class CameraFailure extends Failure {
   const CameraFailure(super.message);
 }
