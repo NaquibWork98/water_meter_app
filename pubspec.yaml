@@ -81,15 +81,21 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
-  # Assets
-  # assets:
-  #   - assets/images/
-  #   - assets/icons/
+# Assets
+  assets:
+    - assets/icon/logo_aquaflow.png
+    - assets/icon/logo_aquaflow.svg
+    - assets/fonts/Inter-VariableFont.ttf
 
   # Fonts
-  # fonts:
-  #   - family: Poppins
-  #     fonts:
-  #       - asset: assets/fonts/Poppins-Regular.ttf
+  fonts:
+     - family: Inter
+       fonts:
+       - asset: assets/fonts/Inter-VariableFont.ttf
   #       - asset: assets/fonts/Poppins-Bold.ttf
   #         weight: 700
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/logo_aquaflow.png"

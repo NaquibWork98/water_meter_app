@@ -15,6 +15,7 @@ class AppTheme {
     useMaterial3: true,
     primaryColor: primaryBlue,
     scaffoldBackgroundColor: Colors.white,
+    fontFamily: 'Inter',
     colorScheme: ColorScheme.fromSeed(
       seedColor: primaryBlue,
       primary: primaryBlue,

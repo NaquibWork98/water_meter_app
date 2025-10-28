@@ -47,7 +47,7 @@ class MeterReadingApp extends StatelessWidget {
         ),
       ],
       child: MaterialApp(
-        title: 'Meter Reading App',
+        title: 'AquaFlow',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         home: const SplashScreen(),
