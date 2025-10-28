@@ -1,12 +1,14 @@
-import 'dart:io';
+import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:camera/camera.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/entities/meter.dart';
 import '../bloc/meter_reading_bloc.dart';
 import '../bloc/meter_reading_event.dart';
-import '../bloc/meter_reading_state.dart';  
+import '../bloc/meter_reading_state.dart';
 import 'reading_confirmation_page.dart';
 
 class CameraCapturePage extends StatefulWidget {
@@ -21,332 +23,549 @@ class CameraCapturePage extends StatefulWidget {
   State<CameraCapturePage> createState() => _CameraCapturePageState();
 }
 
-class _CameraCapturePageState extends State<CameraCapturePage> {
+class _CameraCapturePageState extends State<CameraCapturePage>
+    with WidgetsBindingObserver {
+  CameraController? _cameraController;
+  List<CameraDescription>? _cameras;
+  bool _isCameraInitialized = false;
+  bool _isProcessing = false;
+  String? _extractedReading;
+  Timer? _captureTimer;
   final ImagePicker _picker = ImagePicker();
-  String? _imagePath;
 
-  Future<void> _captureImage() async {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _initializeCamera();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _captureTimer?.cancel();
+    _cameraController?.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final CameraController? cameraController = _cameraController;
+
+    if (cameraController == null || !cameraController.value.isInitialized) {
+      return;
+    }
+
+    if (state == AppLifecycleState.inactive) {
+      cameraController.dispose();
+    } else if (state == AppLifecycleState.resumed) {
+      _initializeCamera();
+    }
+  }
+
+  Future<void> _initializeCamera() async {
     try {
-      final XFile? image = await _picker.pickImage(
-        source: ImageSource.camera,
-        imageQuality: 85,
-        preferredCameraDevice: CameraDevice.rear,
+      _cameras = await availableCameras();
+      if (_cameras!.isEmpty) {
+        if (mounted) {
+          _showError('No cameras available on this device');
+        }
+        return;
+      }
+
+      // Use back camera
+      final backCamera = _cameras!.firstWhere(
+        (camera) => camera.lensDirection == CameraLensDirection.back,
+        orElse: () => _cameras!.first,
       );
 
-      if (image != null) {
+      _cameraController = CameraController(
+        backCamera,
+        ResolutionPreset.high,
+        enableAudio: false,
+        imageFormatGroup: ImageFormatGroup.jpeg,
+      );
+
+      await _cameraController!.initialize();
+
+      if (mounted) {
         setState(() {
-          _imagePath = image.path;
+          _isCameraInitialized = true;
         });
 
-        if (mounted) {
-          // Trigger OCR extraction
-          context.read<MeterReadingBloc>().add(
-                ImageCaptured(image.path),
-              );
-        }
+        // Start continuous capture for OCR
+        _startContinuousCapture();
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to capture image: $e'),
-            backgroundColor: AppTheme.errorRed,
-          ),
-        );
+        _showError('Failed to initialize camera: $e');
       }
     }
   }
 
+  void _startContinuousCapture() {
+    // Capture image every 1.5 seconds for real-time OCR processing
+    _captureTimer = Timer.periodic(const Duration(milliseconds: 1500), (timer) {
+      if (!_isProcessing && _isCameraInitialized && mounted) {
+        _captureForOCR();
+      }
+    });
+  }
+
+  Future<void> _captureForOCR() async {
+    if (_cameraController == null || !_cameraController!.value.isInitialized) {
+      return;
+    }
+
+    if (_isProcessing) return; // Prevent overlapping captures
+
+    try {
+      setState(() {
+        _isProcessing = true;
+      });
+
+      final XFile image = await _cameraController!.takePicture();
+
+      if (mounted) {
+        // Trigger OCR extraction for real-time display
+        context.read<MeterReadingBloc>().add(
+              ImageCaptured(image.path),
+            );
+      }
+    } catch (e) {
+      // Silent fail for continuous capture
+      debugPrint('OCR capture failed: $e');
+    } finally {
+      if (mounted) {
+        // Add delay before allowing next capture
+        await Future.delayed(const Duration(milliseconds: 500));
+        if (mounted) {
+          setState(() {
+            _isProcessing = false;
+          });
+        }
+      }
+    }
+  }
+
+  Future<void> _confirmReading() async {
+    if (_extractedReading == null || _extractedReading!.isEmpty) {
+      return;
+    }
+
+    // Stop continuous capture
+    _captureTimer?.cancel();
+
+    if (mounted) {
+      // Navigate to confirmation with the extracted reading
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ReadingConfirmationPage(
+            meter: widget.meter,
+            extractedReading: _extractedReading!,
+            imagePath: '', // No specific image needed
+          ),
+        ),
+      );
+    }
+  }
+
+
   Future<void> _pickFromGallery() async {
     try {
+      // Stop continuous capture
+      _captureTimer?.cancel();
+
       final XFile? image = await _picker.pickImage(
         source: ImageSource.gallery,
         imageQuality: 85,
       );
 
-      if (image != null) {
-        setState(() {
-          _imagePath = image.path;
-        });
-
-        if (mounted) {
-          // Trigger OCR extraction
-          context.read<MeterReadingBloc>().add(
-                ImageCaptured(image.path),
-              );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to pick image: $e'),
-            backgroundColor: AppTheme.errorRed,
+      if (image != null && mounted) {
+        // Navigate directly to confirmation page
+        // OCR will be triggered there if needed
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ReadingConfirmationPage(
+              meter: widget.meter,
+              extractedReading: '', // Let confirmation page handle OCR
+              imagePath: image.path,
+            ),
           ),
         );
       }
+    } catch (e) {
+      _showError('Failed to pick image: $e');
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Capture Meter Reading'),
+  void _showError(String message) {
+    if (!mounted) return;
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppTheme.errorRed,
       ),
-      body: BlocConsumer<MeterReadingBloc, MeterReadingState>(
-        listener: (context, state) {
-        if (state is OCRReadingExtracted) {
-          // Navigate to confirmation page
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ReadingConfirmationPage(
-                meter: widget.meter,
-                extractedReading: state.extractedReading,
-                imagePath: state.imagePath,
+    );
+  }
+
+  Widget _buildCameraPreview() {
+    if (!_isCameraInitialized || _cameraController == null) {
+      return Container(
+        color: Colors.black,
+        child: const Center(
+          child: CircularProgressIndicator(
+            color: Colors.white,
+          ),
+        ),
+      );
+    }
+
+    final size = MediaQuery.of(context).size;
+    final deviceRatio = size.width / size.height;
+    final cameraRatio = _cameraController!.value.aspectRatio;
+
+    return Transform.scale(
+      scale: deviceRatio / cameraRatio,
+      child: Center(
+        child: CameraPreview(_cameraController!),
+      ),
+    );
+  }
+
+  Widget _buildOverlay() {
+    return Stack(
+      children: [
+        // Top info card
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.black.withOpacity(0.7),
+                  Colors.black.withOpacity(0.0),
+                ],
               ),
             ),
-          );
-        } else if (state is MeterReadingError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: AppTheme.errorRed,
-            ),
-          );
-        }
-      },
-        builder: (context, state) {
-          return Column(
-            children: [
-              // Meter Info Card
-              Container(
-                margin: const EdgeInsets.all(16),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppTheme.primaryBlue.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: AppTheme.primaryBlue.withValues(alpha: 0.3),
+            child: SafeArea(
+              bottom: false,
+              child: Column(
+                children: [
+                  // App bar
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(
+                            Icons.arrow_back,
+                            color: Colors.white,
+                          ),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                        const Expanded(
+                          child: Text(
+                            'Meter Reading',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                        const SizedBox(width: 48), // Balance the back button
+                      ],
+                    ),
                   ),
-                ),
+                ],
+              ),
+            ),
+          ),
+        ),
+
+        // Center guide frame with dashed border (positioned higher)
+        Positioned(
+          top: MediaQuery.of(context).size.height * 0.2,
+          left: MediaQuery.of(context).size.width * 0.075,
+          right: MediaQuery.of(context).size.width * 0.075,
+          child: Container(
+            height: MediaQuery.of(context).size.height * 0.4,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: CustomPaint(
+              painter: DashedBorderPainter(
+                color: Colors.white,
+                strokeWidth: 3,
+                dashWidth: 20,
+                dashSpace: 10,
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.center_focus_weak,
+                    size: 64,
+                    color: Colors.white.withOpacity(0.8),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Align meter within the frame',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.9),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+
+        // Bottom controls and extracted reading
+        Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.bottomCenter,
+                end: Alignment.topCenter,
+                colors: [
+                  Colors.black.withOpacity(0.8),
+                  Colors.black.withOpacity(0.0),
+                ],
+              ),
+            ),
+            child: SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.person,
-                          color: AppTheme.primaryBlue,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          widget.meter.tenantName,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.textDark,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.location_on,
-                          color: AppTheme.textLight,
-                          size: 16,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          widget.meter.location,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: AppTheme.textLight,
-                          ),
-                        ),
-                      ],
-                    ),
-                    if (widget.meter.lastReading != null) ...[
-                      const SizedBox(height: 8),
-                      Row(
+                    // Extracted reading display (always visible)
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 16,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.85),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
                         children: [
-                          const Icon(
-                            Icons.water_drop,
-                            color: AppTheme.textLight,
-                            size: 16,
-                          ),
-                          const SizedBox(width: 8),
                           Text(
-                            'Last Reading: ${widget.meter.lastReading} m³',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: AppTheme.textLight,
+                            'Extracted Reading',
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.7),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            _extractedReading ?? '-------',
+                            style: TextStyle(
+                              color: _extractedReading != null &&
+                                      _extractedReading!.isNotEmpty
+                                  ? Colors.white
+                                  : Colors.white.withOpacity(0.3),
+                              fontSize: 36,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 4,
                             ),
                           ),
                         ],
                       ),
-                    ],
-                  ],
-                ),
-              ),
-
-              // Image Preview or Placeholder
-              Expanded(
-                child: Container(
-                  margin: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppTheme.lightGray,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: AppTheme.textLight.withValues(alpha: 0.3),
                     ),
-                  ),
-                  child: _imagePath != null
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
-                          child: Image.file(
-                            File(_imagePath!),
-                            fit: BoxFit.contain,
-                          ),
-                        )
-                      : Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.camera_alt,
-                                size: 64,
-                                color: AppTheme.textLight.withValues(alpha: 0.5),
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                'No image captured yet',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: AppTheme.textLight.withValues(alpha: 0.7),
-                                ),
-                              ),
-                            ],
+
+                    // Action buttons
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Gallery button
+                        OutlinedButton.icon(
+                          onPressed: _pickFromGallery,
+                          icon: const Icon(Icons.photo_library),
+                          label: const Text('Choose from Gallery'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.white,
+                            side: const BorderSide(color: Colors.white, width: 2),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                           ),
                         ),
-                ),
-              ),
-
-              // Loading indicator
-              if (state is MeterReadingLoading)
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      const CircularProgressIndicator(),
-                      const SizedBox(height: 8),
-                      Text(
-                        state.message ?? 'Processing...',
-                        style: const TextStyle(
-                          color: AppTheme.textLight,
+                        
+                        const SizedBox(height: 12),
+                        
+                        // Confirm button (full width)
+                        ElevatedButton(
+                          onPressed: _extractedReading != null &&
+                                  _extractedReading!.isNotEmpty
+                              ? _confirmReading
+                              : null,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.primaryBlue,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 18),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            disabledBackgroundColor: AppTheme.primaryBlue.withOpacity(0.5),
+                            elevation: 4,
+                          ),
+                          child: const Text(
+                            'CONFIRM',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1.2,
+                            ),
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-
-              // Action Buttons
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    ElevatedButton.icon(
-                      onPressed: state is MeterReadingLoading
-                          ? null
-                          : _captureImage,
-                      icon: const Icon(Icons.camera_alt),
-                      label: Text(
-                        _imagePath != null ? 'Retake Photo' : 'Take Photo',
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    OutlinedButton.icon(
-                      onPressed: state is MeterReadingLoading
-                          ? null
-                          : _pickFromGallery,
-                      icon: const Icon(Icons.photo_library),
-                      label: const Text('Choose from Gallery'),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 32,
-                          vertical: 16,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextButton.icon(
-                      onPressed: state is MeterReadingLoading
-                          ? null
-                          : () {
-                              // Show manual entry dialog
-                              _showManualEntryDialog();
-                            },
-                      icon: const Icon(Icons.edit),
-                      label: const Text('Enter Manually'),
+                      ],
                     ),
                   ],
                 ),
               ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  void _showManualEntryDialog() {
-    final controller = TextEditingController();
-    
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Enter Reading Manually'),
-        content: TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          decoration: const InputDecoration(
-            labelText: 'Meter Reading',
-            hintText: 'e.g., 12345.67',
-            suffixText: 'm³',
+            ),
           ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (controller.text.isNotEmpty) {
-                Navigator.pop(context);
-                
-                // Navigate to confirmation page with manual entry
-                Navigator.pushReplacement(
-                  this.context,
-                  MaterialPageRoute(
-                    builder: (context) => ReadingConfirmationPage(
-                      meter: widget.meter,
-                      extractedReading: controller.text,
-                      imagePath: '', // No image for manual entry
-                    ),
-                  ),
-                );
-              }
-            },
-            child: const Text('Continue'),
-          ),
-        ],
+
+
+      ],
+    );
+  }
+
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: BlocListener<MeterReadingBloc, MeterReadingState>(
+        listener: (context, state) {
+          if (state is OCRReadingExtracted) {
+            // Update extracted reading for real-time display
+            if (mounted) {
+              setState(() {
+                _extractedReading = state.extractedReading;
+              });
+            }
+          } else if (state is MeterReadingError) {
+            // Only show critical errors, ignore OCR failures during scanning
+            if (!state.message.contains('OCR') && 
+                !state.message.contains('extract')) {
+              _showError(state.message);
+            }
+          }
+        },
+        child: Stack(
+          children: [
+            // Camera preview (full screen)
+            _buildCameraPreview(),
+            
+            // Overlay UI
+            _buildOverlay(),
+          ],
+        ),
       ),
     );
   }
+}
+
+/// Custom painter for creating dashed border
+class DashedBorderPainter extends CustomPainter {
+  final Color color;
+  final double strokeWidth;
+  final double dashWidth;
+  final double dashSpace;
+
+  DashedBorderPainter({
+    required this.color,
+    this.strokeWidth = 2.0,
+    this.dashWidth = 10.0,
+    this.dashSpace = 5.0,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke;
+
+    // Top border
+    _drawDashedLine(
+      canvas,
+      paint,
+      Offset(0, 0),
+      Offset(size.width, 0),
+    );
+    
+    // Right border
+    _drawDashedLine(
+      canvas,
+      paint,
+      Offset(size.width, 0),
+      Offset(size.width, size.height),
+    );
+    
+    // Bottom border
+    _drawDashedLine(
+      canvas,
+      paint,
+      Offset(size.width, size.height),
+      Offset(0, size.height),
+    );
+    
+    // Left border
+    _drawDashedLine(
+      canvas,
+      paint,
+      Offset(0, size.height),
+      Offset(0, 0),
+    );
+  }
+
+  void _drawDashedLine(Canvas canvas, Paint paint, Offset start, Offset end) {
+    final dx = end.dx - start.dx;
+    final dy = end.dy - start.dy;
+    final distance = sqrt(dx * dx + dy * dy);
+    final dashCount = (distance / (dashWidth + dashSpace)).floor();
+
+    final unitX = dx / distance;
+    final unitY = dy / distance;
+
+    for (int i = 0; i < dashCount; i++) {
+      final startX = start.dx + (dashWidth + dashSpace) * i * unitX;
+      final startY = start.dy + (dashWidth + dashSpace) * i * unitY;
+      final endX = startX + dashWidth * unitX;
+      final endY = startY + dashWidth * unitY;
+
+      canvas.drawLine(
+        Offset(startX, startY),
+        Offset(endX, endY),
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

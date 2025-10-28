@@ -11,7 +11,7 @@ import '../bloc/meter_reading_state.dart';
 import 'qr_scanner_page.dart';
 import 'settings_page.dart';
 import 'tenant_details_page.dart';
-import 'camera_capture_page.dart';
+// import 'camera_capture_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
