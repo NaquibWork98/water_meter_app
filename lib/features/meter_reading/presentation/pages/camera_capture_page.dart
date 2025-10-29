@@ -167,6 +167,7 @@ class _CameraCapturePageState extends State<CameraCapturePage>
     }
   }
 
+
   Future<void> _pickFromGallery() async {
     try {
       // Stop continuous capture
@@ -245,8 +246,8 @@ class _CameraCapturePageState extends State<CameraCapturePage>
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Colors.black.withOpacity(0.7),
-                  Colors.black.withOpacity(0.0),
+                  Colors.black.withValues(alpha:0.3),
+                  Colors.black.withValues(alpha:0.0),
                 ],
               ),
             ),
@@ -296,6 +297,8 @@ class _CameraCapturePageState extends State<CameraCapturePage>
             height: MediaQuery.of(context).size.height * 0.4,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
+              // Semi-transparent overlay inside the frame
+              color: Colors.white.withValues(alpha: 0.20),
             ),
             child: CustomPaint(
               painter: DashedBorderPainter(
@@ -310,13 +313,13 @@ class _CameraCapturePageState extends State<CameraCapturePage>
                   Icon(
                     Icons.center_focus_weak,
                     size: 64,
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha:0.8),
                   ),
                   const SizedBox(height: 16),
                   Text(
                     'Align meter within the frame',
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha:0.9),
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
                     ),
@@ -338,8 +341,8 @@ class _CameraCapturePageState extends State<CameraCapturePage>
                 begin: Alignment.bottomCenter,
                 end: Alignment.topCenter,
                 colors: [
-                  Colors.black.withOpacity(0.8),
-                  Colors.black.withOpacity(0.0),
+                  Colors.black.withValues(alpha:0.8),
+                  Colors.black.withValues(alpha:0.0),
                 ],
               ),
             ),
@@ -358,7 +361,7 @@ class _CameraCapturePageState extends State<CameraCapturePage>
                         vertical: 16,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.85),
+                        color: Colors.black.withValues(alpha:0.85),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Column(
@@ -366,7 +369,7 @@ class _CameraCapturePageState extends State<CameraCapturePage>
                           Text(
                             'Extracted Reading',
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.7),
+                              color: Colors.white.withValues(alpha:0.7),
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
                             ),
@@ -378,7 +381,7 @@ class _CameraCapturePageState extends State<CameraCapturePage>
                               color: _extractedReading != null &&
                                       _extractedReading!.isNotEmpty
                                   ? Colors.white
-                                  : Colors.white.withOpacity(0.3),
+                                  : Colors.white.withValues(alpha:0.3),
                               fontSize: 36,
                               fontWeight: FontWeight.bold,
                               letterSpacing: 4,
@@ -422,7 +425,7 @@ class _CameraCapturePageState extends State<CameraCapturePage>
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            disabledBackgroundColor: AppTheme.primaryBlue.withOpacity(0.5),
+                            // disabledBackgroundColor: AppTheme.primaryBlue.withOpacity(0.5),
                             elevation: 4,
                           ),
                           child: const Text(
@@ -508,7 +511,7 @@ class DashedBorderPainter extends CustomPainter {
     _drawDashedLine(
       canvas,
       paint,
-      Offset(0, 0),
+      const Offset(0, 0),
       Offset(size.width, 0),
     );
     
@@ -533,7 +536,7 @@ class DashedBorderPainter extends CustomPainter {
       canvas,
       paint,
       Offset(0, size.height),
-      Offset(0, 0),
+      const Offset(0, 0),
     );
   }
 
@@ -541,22 +544,31 @@ class DashedBorderPainter extends CustomPainter {
     final dx = end.dx - start.dx;
     final dy = end.dy - start.dy;
     final distance = sqrt(dx * dx + dy * dy);
-    final dashCount = (distance / (dashWidth + dashSpace)).floor();
-
+    
     final unitX = dx / distance;
     final unitY = dy / distance;
 
-    for (int i = 0; i < dashCount; i++) {
-      final startX = start.dx + (dashWidth + dashSpace) * i * unitX;
-      final startY = start.dy + (dashWidth + dashSpace) * i * unitY;
-      final endX = startX + dashWidth * unitX;
-      final endY = startY + dashWidth * unitY;
+    double currentDistance = 0;
+    
+    // Draw dashes until we reach or exceed the total distance
+    while (currentDistance < distance) {
+      final startX = start.dx + currentDistance * unitX;
+      final startY = start.dy + currentDistance * unitY;
+      
+      // Calculate end point, but don't exceed the line end
+      final remainingDistance = distance - currentDistance;
+      final currentDashWidth = remainingDistance < dashWidth ? remainingDistance : dashWidth;
+      
+      final endX = startX + currentDashWidth * unitX;
+      final endY = startY + currentDashWidth * unitY;
 
       canvas.drawLine(
         Offset(startX, startY),
         Offset(endX, endY),
         paint,
       );
+      
+      currentDistance += dashWidth + dashSpace;
     }
   }
 

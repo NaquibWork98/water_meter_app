@@ -224,7 +224,7 @@ class _ReadingConfirmationPageState extends State<ReadingConfirmationPage> {
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                         borderSide: BorderSide(
-                          color: AppTheme.primaryBlue.withOpacity(0.3),
+                          color: AppTheme.primaryBlue.withValues(alpha:0.3),
                           width: 2,
                         ),
                       ),
