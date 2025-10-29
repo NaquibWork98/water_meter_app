@@ -70,68 +70,12 @@ class _ReadingConfirmationPageState extends State<ReadingConfirmationPage> {
       body: BlocConsumer<MeterReadingBloc, MeterReadingState>(
         listener: (context, state) {
           if (state is ReadingSubmitted) {
-            // Show success dialog
-            showDialog(
-              context: context,
-              barrierDismissible: false,
-              builder: (context) => AlertDialog(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppTheme.successGreen.withValues(alpha: 0.1),  
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.check_circle,
-                        color: AppTheme.successGreen,
-                        size: 64,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    const Text(
-                      'Upload Successful!',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.textDark,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      state.message,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: AppTheme.textLight,
-                      ),
-                    ),
-                  ],
-                ),
-                actions: [
-                  ElevatedButton(
-                    onPressed: () {
-                      // Reset bloc and navigate to home
-                      context.read<MeterReadingBloc>().add(MeterReadingReset());
-                      Navigator.of(context).pop(); // Close dialog
-                      Navigator.of(context).pushAndRemoveUntil(
-                        MaterialPageRoute(
-                          builder: (context) => const HomePage(),
-                        ),
-                        (route) => false,
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.successGreen,
-                    ),
-                    child: const Text('Back to Home'),
-                  ),
-                ],
+            // Navigate to full-page success screen
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(
+                builder: (context) => const UploadSuccessPage(),
               ),
+              (route) => false,
             );
           } else if (state is MeterReadingError) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -319,6 +263,125 @@ class _ReadingConfirmationPageState extends State<ReadingConfirmationPage> {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+/// Full-page upload success screen
+class UploadSuccessPage extends StatelessWidget {
+  const UploadSuccessPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: const Text('Upload Status'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            // Reset bloc and navigate to home
+            context.read<MeterReadingBloc>().add(MeterReadingReset());
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(
+                builder: (context) => const HomePage(),
+              ),
+              (route) => false,
+            );
+          },
+        ),
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Success icon with shadow
+              Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  color: AppTheme.successGreen,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.successGreen.withValues(alpha: 0.3),
+                      blurRadius: 20,
+                      spreadRadius: 5,
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.check,
+                  color: Colors.white,
+                  size: 64,
+                ),
+              ),
+              
+              const SizedBox(height: 40),
+              
+              // Success title
+              const Text(
+                'Upload Successful!',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textDark,
+                ),
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // Success message
+              const Text(
+                'The meter reading has been successfully\nsaved to the system.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppTheme.textLight,
+                  height: 1.5,
+                ),
+              ),
+              
+              const SizedBox(height: 60),
+              
+              // Back to Tenant Details button
+              SizedBox(
+                width: double.infinity,
+                height: 54,
+                child: ElevatedButton(
+                  onPressed: () {
+                    // Reset bloc and navigate to home
+                    context.read<MeterReadingBloc>().add(MeterReadingReset());
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(
+                        builder: (context) => const HomePage(),
+                      ),
+                      (route) => false,
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryBlue,
+                    foregroundColor: Colors.white,
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text(
+                    'Back to Tenant Details',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
