@@ -137,13 +137,9 @@ class _CameraCapturePageState extends State<CameraCapturePage>
       debugPrint('OCR capture failed: $e');
     } finally {
       if (mounted) {
-        // Add delay before allowing next capture
-        await Future.delayed(const Duration(milliseconds: 500));
-        if (mounted) {
-          setState(() {
-            _isProcessing = false;
-          });
-        }
+        setState(() {
+          _isProcessing = false;
+        });
       }
     }
   }
@@ -170,7 +166,6 @@ class _CameraCapturePageState extends State<CameraCapturePage>
       );
     }
   }
-
 
   Future<void> _pickFromGallery() async {
     try {
@@ -224,14 +219,14 @@ class _CameraCapturePageState extends State<CameraCapturePage>
       );
     }
 
-    final size = MediaQuery.of(context).size;
-    final deviceRatio = size.width / size.height;
-    final cameraRatio = _cameraController!.value.aspectRatio;
-
-    return Transform.scale(
-      scale: deviceRatio / cameraRatio,
-      child: Center(
-        child: CameraPreview(_cameraController!),
+    return SizedBox.expand(
+      child: FittedBox(
+        fit: BoxFit.cover,
+        child: SizedBox(
+          width: _cameraController!.value.previewSize?.height ?? 100,
+          height: _cameraController!.value.previewSize?.width ?? 100,
+          child: CameraPreview(_cameraController!),
+        ),
       ),
     );
   }
@@ -452,7 +447,6 @@ class _CameraCapturePageState extends State<CameraCapturePage>
       ],
     );
   }
-
 
   @override
   Widget build(BuildContext context) {

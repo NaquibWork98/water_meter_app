@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/entities/meter.dart';
 import '../../domain/entities/reading.dart';
@@ -63,7 +62,10 @@ class _ReadingConfirmationPageState extends State<ReadingConfirmationPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Confirm Reading'),
-        automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: BlocConsumer<MeterReadingBloc, MeterReadingState>(
         listener: (context, state) {
@@ -150,49 +152,16 @@ class _ReadingConfirmationPageState extends State<ReadingConfirmationPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Meter Info Card
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Meter Details',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: AppTheme.textDark,
-                            ),
-                          ),
-                          const Divider(),
-                          _buildInfoRow(
-                            Icons.person,
-                            'Tenant',
-                            widget.meter.tenantName,
-                          ),
-                          const SizedBox(height: 8),
-                          _buildInfoRow(
-                            Icons.location_on,
-                            'Location',
-                            widget.meter.location,
-                          ),
-                          if (widget.meter.lastReading != null) ...[
-                            const SizedBox(height: 8),
-                            _buildInfoRow(
-                              Icons.water_drop,
-                              'Last Reading',
-                              '${widget.meter.lastReading} m³',
-                            ),
-                          ],
-                          const SizedBox(height: 8),
-                          _buildInfoRow(
-                            Icons.calendar_today,
-                            'Date',
-                            DateFormat('dd MMM yyyy, HH:mm')
-                                .format(DateTime.now()),
-                          ),
-                        ],
+                  // Header text
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8),
+                    child: Text(
+                      'Review the meter reading extracted from\nthe photo. Edit if needed.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: AppTheme.textLight,
+                        height: 1.5,
                       ),
                     ),
                   ),
@@ -200,98 +169,89 @@ class _ReadingConfirmationPageState extends State<ReadingConfirmationPage> {
 
                   // Image Preview (if available)
                   if (widget.imagePath.isNotEmpty) ...[
-                    Card(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Padding(
-                            padding: EdgeInsets.all(16),
-                            child: Text(
-                              'Captured Image',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: AppTheme.textDark,
-                              ),
-                            ),
-                          ),
-                          ClipRRect(
-                            borderRadius: const BorderRadius.only(
-                              bottomLeft: Radius.circular(16),
-                              bottomRight: Radius.circular(16),
-                            ),
-                            child: Image.file(
-                              File(widget.imagePath),
-                              height: 200,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ],
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.file(
+                        File(widget.imagePath),
+                        height: 250,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 24),
                   ],
 
-                  // Reading Input Card
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Meter Reading',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: AppTheme.textDark,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          TextFormField(
-                            controller: _readingController,
-                            enabled: !isLoading,
-                            keyboardType: const TextInputType.numberWithOptions(
-                              decimal: true,
-                            ),
-                            decoration: InputDecoration(
-                              labelText: 'Reading Value',
-                              hintText: 'Enter meter reading',
-                              suffixText: 'm³',
-                              prefixIcon: const Icon(Icons.water_drop),
-                              helperText: 'Verify and edit if needed',
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter a reading';
-                              }
-                              final number = double.tryParse(value);
-                              if (number == null) {
-                                return 'Please enter a valid number';
-                              }
-                              if (number < 0) {
-                                return 'Reading cannot be negative';
-                              }
-                              // Optional: Check if reading is less than last reading
-                              if (widget.meter.lastReading != null) {
-                                final lastReading =
-                                    double.tryParse(widget.meter.lastReading!);
-                                if (lastReading != null && number < lastReading) {
-                                  return 'Reading cannot be less than last reading ($lastReading m³)';
-                                }
-                              }
-                              return null;
-                            },
-                          ),
-                        ],
-                      ),
+                  // Reading Input
+                  const Text(
+                    'Meter Reading',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textDark,
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 12),
+                  
+                  TextFormField(
+                    controller: _readingController,
+                    enabled: !isLoading,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 2,
+                    ),
+                    textAlign: TextAlign.center,
+                    decoration: InputDecoration(
+                      hintText: '0000000',
+                      suffixIcon: const Icon(
+                        Icons.edit,
+                        color: AppTheme.primaryBlue,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 20,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(
+                          color: AppTheme.primaryBlue,
+                          width: 2,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(
+                          color: AppTheme.primaryBlue.withOpacity(0.3),
+                          width: 2,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(
+                          color: AppTheme.primaryBlue,
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter a reading';
+                      }
+                      final number = double.tryParse(value);
+                      if (number == null) {
+                        return 'Please enter a valid number';
+                      }
+                      if (number < 0) {
+                        return 'Reading cannot be negative';
+                      }
+                      return null;
+                    },
+                  ),
+                  
+                  const SizedBox(height: 32),
 
                   // Action Buttons
                   if (isLoading)
@@ -308,28 +268,48 @@ class _ReadingConfirmationPageState extends State<ReadingConfirmationPage> {
                       ),
                     )
                   else ...[
-                    SizedBox(
-                      height: 54,
-                      child: ElevatedButton.icon(
-                        onPressed: _confirmReading,
-                        icon: const Icon(Icons.check_circle),
-                        label: const Text('Confirm & Submit'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.successGreen,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
+                    // Retake Photo button
                     SizedBox(
                       height: 54,
                       child: OutlinedButton.icon(
                         onPressed: () {
                           Navigator.pop(context);
                         },
-                        icon: const Icon(Icons.arrow_back),
+                        icon: const Icon(Icons.refresh),
                         label: const Text('Retake Photo'),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: AppTheme.primaryBlue,
+                          side: const BorderSide(
+                            color: AppTheme.primaryBlue,
+                            width: 2,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    
+                    // Confirm & Save button
+                    SizedBox(
+                      height: 54,
+                      child: ElevatedButton(
+                        onPressed: _confirmReading,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primaryBlue,
+                          foregroundColor: Colors.white,
+                          elevation: 2,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text(
+                          'Confirm & Save',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
@@ -340,37 +320,6 @@ class _ReadingConfirmationPageState extends State<ReadingConfirmationPage> {
           );
         },
       ),
-    );
-  }
-
-  Widget _buildInfoRow(IconData icon, String label, String value) {
-    return Row(
-      children: [
-        Icon(icon, size: 20, color: AppTheme.textLight),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppTheme.textLight,
-                ),
-              ),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppTheme.textDark,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }
