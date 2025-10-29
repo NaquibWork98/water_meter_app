@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../authentication/presentation/bloc/auth_bloc.dart';
-import '../../../authentication/presentation/bloc/auth_event.dart';  // ✅ ADD THIS IMPORT
-import '../../../authentication/presentation/bloc/auth_state.dart';  // ✅ ADD THIS IMPORT
+import '../../../authentication/presentation/bloc/auth_event.dart';
+import '../../../authentication/presentation/bloc/auth_state.dart';
 import '../../../authentication/presentation/pages/login_page.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -12,8 +12,23 @@ class SettingsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: const Text('Settings'),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text(
+          'Settings',
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        centerTitle: true,
       ),
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
@@ -36,195 +51,170 @@ class SettingsPage extends StatelessWidget {
             }
 
             return ListView(
+              padding: EdgeInsets.zero,
               children: [
                 // User Profile Section
                 Container(
-                  margin: const EdgeInsets.all(16),
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [AppTheme.primaryBlue, AppTheme.darkBlue],
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Row(
+                  color: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+                  child: Column(
                     children: [
+                      // Avatar
                       CircleAvatar(
-                        radius: 35,
-                        backgroundColor: Colors.white,
-                        child: Text(
-                          userName[0].toUpperCase(),
-                          style: const TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.primaryBlue,
-                          ),
+                        radius: 40,
+                        backgroundColor: AppTheme.primaryBlue.withAlpha(51),
+                        child: Icon(
+                          Icons.person,
+                          size: 40,
+                          color: AppTheme.primaryBlue,
                         ),
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              userName,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
+                      const SizedBox(height: 12),
+                      // User Name
+                      Text(
+                        userName,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      // User Email
+                      Text(
+                        userEmail,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      // Edit Profile Button
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton(
+                          onPressed: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Edit profile coming soon'),
                               ),
+                            );
+                          },
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide(color: AppTheme.primaryBlue),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              userEmail,
-                              style: const TextStyle(
-                                color: Colors.white70,
-                                fontSize: 14,
-                              ),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          child: const Text(
+                            'Edit Profile',
+                            style: TextStyle(
+                              color: AppTheme.primaryBlue,
+                              fontWeight: FontWeight.w600,
                             ),
-                          ],
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ),
 
-                // General Settings
-                _buildSectionHeader('General'),
-                _buildSettingsTile(
-                  icon: Icons.notifications_outlined,
-                  title: 'Notifications',
-                  subtitle: 'Manage notification preferences',
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Notifications settings coming soon'),
-                      ),
-                    );
-                  },
-                ),
-                _buildSettingsTile(
-                  icon: Icons.language,
-                  title: 'Language',
-                  subtitle: 'English',
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Language settings coming soon'),
-                      ),
-                    );
-                  },
-                ),
-                _buildSettingsTile(
-                  icon: Icons.dark_mode_outlined,
-                  title: 'Theme',
-                  subtitle: 'Light mode',
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Theme settings coming soon'),
-                      ),
-                    );
-                  },
-                ),
+                const SizedBox(height: 8),
 
-                // Account Settings
-                _buildSectionHeader('Account'),
-                _buildSettingsTile(
-                  icon: Icons.person_outline,
-                  title: 'Edit Profile',
-                  subtitle: 'Update your personal information',
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Edit profile coming soon'),
-                      ),
-                    );
-                  },
-                ),
-                _buildSettingsTile(
-                  icon: Icons.lock_outline,
-                  title: 'Change Password',
-                  subtitle: 'Update your password',
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Change password coming soon'),
-                      ),
-                    );
-                  },
-                ),
-
-                // App Information
-                _buildSectionHeader('About'),
-                _buildSettingsTile(
-                  icon: Icons.info_outline,
-                  title: 'About App',
-                  subtitle: 'Version 1.0.0',
-                  onTap: () {
-                    showAboutDialog(
-                      context: context,
-                      applicationName: 'Meter Reading App',
-                      applicationVersion: '1.0.0',
-                      applicationIcon: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: AppTheme.primaryBlue.withValues(alpha: 0.1),  // ✅ FIXED
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(
-                          Icons.water_drop,
-                          color: AppTheme.primaryBlue,
-                          size: 32,
+                // General Section
+                Container(
+                  color: Colors.white,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                        child: Text(
+                          'General',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
                         ),
                       ),
-                      children: [
-                        const Text(
-                          'A Flutter application for automating water meter reading and billing for commercial buildings.',
+                      _buildSettingsTile(
+                        icon: Icons.notifications_outlined,
+                        title: 'Notifications',
+                        trailing: Switch(
+                          value: false,
+                          onChanged: (value) {
+                            // Handle notification toggle
+                          },
+                          activeColor: AppTheme.primaryBlue,
                         ),
-                      ],
-                    );
-                  },
-                ),
-                _buildSettingsTile(
-                  icon: Icons.privacy_tip_outlined,
-                  title: 'Privacy Policy',
-                  subtitle: 'Read our privacy policy',
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Privacy policy coming soon'),
                       ),
-                    );
-                  },
-                ),
-                _buildSettingsTile(
-                  icon: Icons.description_outlined,
-                  title: 'Terms of Service',
-                  subtitle: 'Read our terms of service',
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Terms of service coming soon'),
+                      const Divider(height: 1, indent: 56),
+                      _buildSettingsTile(
+                        icon: Icons.language,
+                        title: 'Language',
+                        trailing: const Icon(
+                          Icons.arrow_forward_ios,
+                          size: 16,
+                          color: Colors.grey,
+                        ),
+                        onTap: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Language settings coming soon'),
+                            ),
+                          );
+                        },
                       ),
-                    );
-                  },
+                      const Divider(height: 1, indent: 56),
+                      _buildSettingsTile(
+                        icon: Icons.sync,
+                        title: 'Data Sync',
+                        subtitle: 'Wi-Fi Only',
+                        trailing: const Icon(
+                          Icons.arrow_forward_ios,
+                          size: 16,
+                          color: Colors.grey,
+                        ),
+                        onTap: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Data sync settings coming soon'),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 ),
 
-                // Logout
-                const SizedBox(height: 20),
+                const SizedBox(height: 32),
+
+                // Logout Button
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: SizedBox(
-                    height: 54,
-                    child: ElevatedButton.icon(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
                       onPressed: () {
                         _showLogoutDialog(context);
                       },
-                      icon: const Icon(Icons.logout),
-                      label: const Text('Logout'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.errorRed,
+                      icon: const Icon(Icons.logout, color: Colors.red, size: 20),
+                      label: const Text(
+                        'Logout',
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Colors.red),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
                     ),
                   ),
@@ -238,60 +228,39 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionHeader(String title) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
-      child: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.bold,
-          color: AppTheme.textLight,
-        ),
-      ),
-    );
-  }
-
   Widget _buildSettingsTile({
     required IconData icon,
     required String title,
-    required String subtitle,
-    required VoidCallback onTap,
+    String? subtitle,
+    Widget? trailing,
+    VoidCallback? onTap,
   }) {
     return ListTile(
-      leading: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: AppTheme.primaryBlue.withValues(alpha: 0.1),  // ✅ FIXED
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Icon(
-          icon,
-          color: AppTheme.primaryBlue,
-          size: 24,
-        ),
+      leading: Icon(
+        icon,
+        color: Colors.grey[700],
+        size: 24,
       ),
       title: Text(
         title,
         style: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-          color: AppTheme.textDark,
+          fontSize: 15,
+          fontWeight: FontWeight.w500,
+          color: Colors.black,
         ),
       ),
-      subtitle: Text(
-        subtitle,
-        style: const TextStyle(
-          fontSize: 13,
-          color: AppTheme.textLight,
-        ),
-      ),
-      trailing: const Icon(
-        Icons.arrow_forward_ios,
-        size: 16,
-        color: AppTheme.textLight,
-      ),
+      subtitle: subtitle != null
+          ? Text(
+              subtitle,
+              style: TextStyle(
+                fontSize: 13,
+                color: Colors.grey[600],
+              ),
+            )
+          : null,
+      trailing: trailing,
       onTap: onTap,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
     );
   }
 

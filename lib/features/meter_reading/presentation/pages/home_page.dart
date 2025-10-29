@@ -11,7 +11,6 @@ import '../bloc/meter_reading_state.dart';
 import 'qr_scanner_page.dart';
 import 'settings_page.dart';
 import 'tenant_details_page.dart';
-// import 'camera_capture_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -36,17 +35,27 @@ class _HomePageState extends State<HomePage> {
     });
 
     if (index == 1) {
-      // Navigate to QR Scanner
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const QRScannerPage()),
-      );
+      // Show QR Scanner bottom sheet
+      showQRScannerBottomSheet(context);
+      // Reset selection back to home
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (mounted) {
+          setState(() {
+            _selectedIndex = 0;
+          });
+        }
+      });
     } else if (index == 2) {
       // Navigate to Settings
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => const SettingsPage()),
-      );
+      ).then((_) {
+        // Reset selection when coming back
+        setState(() {
+          _selectedIndex = 0;
+        });
+      });
     }
   }
 
@@ -227,17 +236,16 @@ class _HomePageState extends State<HomePage> {
                             margin: const EdgeInsets.only(bottom: 12),
                             child: InkWell(
                               onTap: () {
-                              // Navigate to Tenant Details Page
-                              Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => TenantDetailsPage(
-                                  tenant: tenant,
-                                  //meter: meter,
-                                ),
-                                ),
-                              );
-                            },
+                                // Navigate to Tenant Details Page
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => TenantDetailsPage(
+                                      tenant: tenant,
+                                    ),
+                                  ),
+                                );
+                              },
                               borderRadius: BorderRadius.circular(16),
                               child: Padding(
                                 padding: const EdgeInsets.all(16),
@@ -392,10 +400,7 @@ class _HomePageState extends State<HomePage> {
         ),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const QRScannerPage()),
-            );
+            showQRScannerBottomSheet(context);
           },
           icon: const Icon(Icons.qr_code_scanner),
           label: const Text('Scan QR'),
