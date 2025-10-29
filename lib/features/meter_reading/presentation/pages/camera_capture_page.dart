@@ -246,7 +246,7 @@ class _CameraCapturePageState extends State<CameraCapturePage>
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Colors.black.withValues(alpha:0.3),
+                  Colors.black.withValues(alpha:0.30),
                   Colors.black.withValues(alpha:0.0),
                 ],
               ),
@@ -414,10 +414,7 @@ class _CameraCapturePageState extends State<CameraCapturePage>
                         
                         // Confirm button (full width)
                         ElevatedButton(
-                          onPressed: _extractedReading != null &&
-                                  _extractedReading!.isNotEmpty
-                              ? _confirmReading
-                              : null,
+                          onPressed: _confirmReading,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppTheme.primaryBlue,
                             foregroundColor: Colors.white,
@@ -429,7 +426,7 @@ class _CameraCapturePageState extends State<CameraCapturePage>
                             elevation: 4,
                           ),
                           child: const Text(
-                            'CONFIRM',
+                            'Confirm',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
