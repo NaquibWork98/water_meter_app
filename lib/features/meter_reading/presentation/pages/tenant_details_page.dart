@@ -2,30 +2,59 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/entities/tenant.dart';
 import '../../domain/entities/meter.dart';
+import '../../domain/entities/reading.dart';
 import 'camera_capture_page.dart';
+import 'reading_details_page.dart';
 
 class TenantDetailsPage extends StatelessWidget {
   final Tenant tenant;
-  // final Meter meter;
 
   const TenantDetailsPage({
     super.key,
     required this.tenant,
-    // required this.meter,
   });
 
   @override
   Widget build(BuildContext context) {
     final meter = Meter(
-    id: tenant.meterId ?? '0',
-    qrCode: 'QR${tenant.id}', // TODO: need to add at other place
-    location: tenant.location,
-    tenantId: tenant.id,
-    tenantName: tenant.name,
-    tenantEmail: tenant.email,
-    lastReading: null,
-    lastReadingDate: null,
+      id: tenant.meterId ?? '0',
+      qrCode: 'QR${tenant.id}',
+      location: tenant.location,
+      tenantId: tenant.id,
+      tenantName: tenant.name,
+      tenantEmail: tenant.email,
+      lastReading: null,
+      lastReadingDate: null,
     );
+
+    // TODO: Replace with actual reading history from repository
+    final List<Reading> readingHistory = [
+      Reading(
+        id: '1',
+        meterId: meter.id,
+        reading: '12345.67',
+        timestamp: DateTime(2025, 9, 5, 10, 30),
+        submittedBy: 'System',
+        isConfirmed: true,
+      ),
+      Reading(
+        id: '2',
+        meterId: meter.id,
+        reading: '12245.50',
+        timestamp: DateTime(2025, 8, 4, 14, 15),
+        submittedBy: 'System',
+        isConfirmed: true,
+      ),
+      Reading(
+        id: '3',
+        meterId: meter.id,
+        reading: '12145.30',
+        timestamp: DateTime(2025, 7, 7, 9, 45),
+        submittedBy: 'System',
+        isConfirmed: true,
+      ),
+    ];
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Tenant Details'),
@@ -151,10 +180,14 @@ class TenantDetailsPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   
-                  // History items (hardcoded for now)
-                  _buildHistoryItem('September 2025', '05/09/2025', '12345.67'),
-                  _buildHistoryItem('August 2025', '04/08/2025', '12345.67'),
-                  _buildHistoryItem('July 2025', '07/07/2025', '12345.67'),
+                  // History items with navigation
+                  ...readingHistory.map((reading) {
+                    return _buildHistoryItem(
+                      context,
+                      reading,
+                      tenant,
+                    );
+                  }).toList(),
                 ],
               ),
             ),
@@ -168,7 +201,6 @@ class TenantDetailsPage extends StatelessWidget {
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   onPressed: () {
-                    // Navigate to Camera Capture Page
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -235,45 +267,81 @@ class TenantDetailsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildHistoryItem(String month, String date, String reading) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppTheme.lightGray,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                month,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              Text(
-                date,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppTheme.textLight,
-                ),
-              ),
-            ],
-          ),
-          Text(
-            '$reading m³',
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: AppTheme.primaryBlue,
+  Widget _buildHistoryItem(
+    BuildContext context,
+    Reading reading,
+    Tenant tenant,
+  ) {
+    // Format the date
+    final monthNames = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    final month = '${monthNames[reading.timestamp.month - 1]} ${reading.timestamp.year}';
+    final date = '${reading.timestamp.day.toString().padLeft(2, '0')}/${reading.timestamp.month.toString().padLeft(2, '0')}/${reading.timestamp.year}';
+
+    return GestureDetector(
+      onTap: () {
+        // Navigate to Reading Details Page
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ReadingDetailsPage(
+              tenant: tenant,
+              reading: reading,
             ),
           ),
-        ],
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppTheme.lightGray,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  month,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Text(
+                  date,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppTheme.textLight,
+                  ),
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                Text(
+                  '${reading.reading} m³',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.primaryBlue,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Icon(
+                  Icons.chevron_right,
+                  color: AppTheme.textLight,
+                  size: 20,
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

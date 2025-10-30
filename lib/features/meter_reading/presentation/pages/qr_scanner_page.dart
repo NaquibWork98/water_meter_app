@@ -25,9 +25,7 @@ class QRScannerBottomSheet extends StatefulWidget {
 }
 
 class _QRScannerBottomSheetState extends State<QRScannerBottomSheet> {
-  // FIX: Make controller nullable and initialize in initState
-  MobileScannerController? cameraController;
-  bool _isInitialized = false;
+  late MobileScannerController cameraController;
   bool _isScanning = true;
   bool _isTorchOn = false;
   double _zoomLevel = 0.0;
@@ -35,36 +33,16 @@ class _QRScannerBottomSheetState extends State<QRScannerBottomSheet> {
   @override
   void initState() {
     super.initState();
-    _initializeScanner();
-  }
-
-  void _initializeScanner() {
-    if (_isInitialized) return;
-    
-    try {
-      cameraController = MobileScannerController(
-        detectionSpeed: DetectionSpeed.normal,
-        facing: CameraFacing.back,
-      );
-      
-      if (mounted) {
-        setState(() {
-          _isInitialized = true;
-        });
-      }
-    } catch (e) {
-      debugPrint('Error initializing scanner: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to initialize scanner: $e')),
-        );
-      }
-    }
+    // Controller will auto-start when MobileScanner widget is built
+    cameraController = MobileScannerController(
+      detectionSpeed: DetectionSpeed.normal,
+      facing: CameraFacing.back,
+    );
   }
 
   @override
   void dispose() {
-    cameraController?.dispose();
+    cameraController.dispose();
     super.dispose();
   }
 
@@ -78,6 +56,9 @@ class _QRScannerBottomSheetState extends State<QRScannerBottomSheet> {
           _isScanning = false;
         });
         
+        // Just stop scanning, don't dispose yet
+        cameraController.stop();
+        
         context.read<MeterReadingBloc>().add(
           QRCodeScanned(barcode.rawValue!),
         );
@@ -87,33 +68,14 @@ class _QRScannerBottomSheetState extends State<QRScannerBottomSheet> {
   }
 
   void _toggleTorch() async {
-    if (cameraController == null) return;
-    
     setState(() {
       _isTorchOn = !_isTorchOn;
     });
-    await cameraController!.toggleTorch();
+    await cameraController.toggleTorch();
   }
 
   @override
   Widget build(BuildContext context) {
-    // Add initialization check
-    if (!_isInitialized || cameraController == null) {
-      return Container(
-        height: MediaQuery.of(context).size.height * 0.75,
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(20),
-          ),
-        ),
-        child: const Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
-    }
-
     return Container(
       height: MediaQuery.of(context).size.height * 0.75,
       decoration: const BoxDecoration(
@@ -126,7 +88,11 @@ class _QRScannerBottomSheetState extends State<QRScannerBottomSheet> {
       child: BlocConsumer<MeterReadingBloc, MeterReadingState>(
         listener: (context, state) {
           if (state is MeterLoaded) {
-            Navigator.pop(context); // Close bottom sheet
+            // Close the bottom sheet first
+            Navigator.pop(context);
+            
+            // Then navigate to camera page
+            // The dispose will be called automatically when bottom sheet closes
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -141,9 +107,11 @@ class _QRScannerBottomSheetState extends State<QRScannerBottomSheet> {
               ),
             );
             
+            // Restart scanning on error
             setState(() {
               _isScanning = true;
             });
+            cameraController.start();
           }
         },
         builder: (context, state) {
@@ -184,14 +152,16 @@ class _QRScannerBottomSheetState extends State<QRScannerBottomSheet> {
                             _isTorchOn ? Icons.flash_on : Icons.flash_off,
                             color: AppTheme.textDark,
                           ),
-                          onPressed: _toggleTorch,
+                          onPressed: _isScanning ? _toggleTorch : null,
                         ),
                         IconButton(
                           icon: const Icon(
                             Icons.flip_camera_ios,
                             color: AppTheme.textDark,
                           ),
-                          onPressed: () => cameraController!.switchCamera(),
+                          onPressed: _isScanning 
+                              ? () => cameraController.switchCamera() 
+                              : null,
                         ),
                       ],
                     ),
@@ -226,14 +196,19 @@ class _QRScannerBottomSheetState extends State<QRScannerBottomSheet> {
                   clipBehavior: Clip.hardEdge,
                   child: Stack(
                     children: [
+                      MobileScanner(
+                        controller: cameraController,
+                        onDetect: _onDetect,
+                      ),
+                      
                       if (state is MeterReadingLoading)
-                        const Center(
-                          child: CircularProgressIndicator(),
-                        )
-                      else
-                        MobileScanner(
-                          controller: cameraController!,
-                          onDetect: _onDetect,
+                        Container(
+                          color: Colors.black54,
+                          child: const Center(
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                            ),
+                          ),
                         ),
                       
                       // Scanning frame overlay
@@ -250,7 +225,7 @@ class _QRScannerBottomSheetState extends State<QRScannerBottomSheet> {
                           ),
                           child: Stack(
                             children: [
-                              // Corner decorations
+                              // Top-left corner
                               Positioned(
                                 top: 0,
                                 left: 0,
@@ -274,6 +249,7 @@ class _QRScannerBottomSheetState extends State<QRScannerBottomSheet> {
                                   ),
                                 ),
                               ),
+                              // Top-right corner
                               Positioned(
                                 top: 0,
                                 right: 0,
@@ -297,6 +273,7 @@ class _QRScannerBottomSheetState extends State<QRScannerBottomSheet> {
                                   ),
                                 ),
                               ),
+                              // Bottom-left corner
                               Positioned(
                                 bottom: 0,
                                 left: 0,
@@ -320,6 +297,7 @@ class _QRScannerBottomSheetState extends State<QRScannerBottomSheet> {
                                   ),
                                 ),
                               ),
+                              // Bottom-right corner
                               Positioned(
                                 bottom: 0,
                                 right: 0,
@@ -370,12 +348,14 @@ class _QRScannerBottomSheetState extends State<QRScannerBottomSheet> {
                       min: 0.0,
                       max: 1.0,
                       activeColor: AppTheme.primaryBlue,
-                      onChanged: (value) {
-                        setState(() {
-                          _zoomLevel = value;
-                        });
-                        cameraController!.setZoomScale(value);
-                      },
+                      onChanged: _isScanning
+                          ? (value) {
+                              setState(() {
+                                _zoomLevel = value;
+                              });
+                              cameraController.setZoomScale(value);
+                            }
+                          : null,
                     ),
                   ],
                 ),
