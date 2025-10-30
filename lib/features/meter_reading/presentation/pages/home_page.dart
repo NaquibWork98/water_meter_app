@@ -11,6 +11,8 @@ import '../bloc/meter_reading_state.dart';
 import 'qr_scanner_page.dart';
 import 'settings_page.dart';
 import 'tenant_details_page.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -72,97 +74,41 @@ class _HomePageState extends State<HomePage> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Home'),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.search),
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Search coming soon!'),
-                  ),
-                );
-              },
-            ),
-          ],
+  backgroundColor: Colors.white,
+  elevation: 0,
+  leadingWidth: 140,
+  leading: Padding(
+    padding: const EdgeInsets.only(left: 8, top: 0, bottom: 0), // Adjust vertical padding
+    child: Image.asset(
+      'assets/icon/logo_aquaflow.png',
+      width: 100,
+      height: 100,
+      fit: BoxFit.contain,
+    ),
+  ),
+  title: BlocBuilder<AuthBloc, AuthState>(
+    builder: (context, state) {
+      String userName = 'User';
+      if (state is AuthAuthenticated) {
+        userName = state.user.name;
+      }
+      return Text(
+        'Welcome, $userName!',
+        style: const TextStyle(
+          color: AppTheme.textDark,
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
         ),
-        body: RefreshIndicator(
-          onRefresh: () async {
-            context.read<MeterReadingBloc>().add(AllTenantsRequested());
-          },
+      );
+    },
+  ),
+),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          context.read<MeterReadingBloc>().add(AllTenantsRequested());
+        },
           child: Column(
             children: [
-              // Welcome Card
-              Container(
-                margin: const EdgeInsets.all(16),
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [AppTheme.primaryBlue, AppTheme.darkBlue],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppTheme.primaryBlue.withAlpha(77),
-                      blurRadius: 10,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
-                ),
-                child: BlocBuilder<AuthBloc, AuthState>(
-                  builder: (context, state) {
-                    String userName = 'Staff';
-                    if (state is AuthAuthenticated) {
-                      userName = state.user.name;
-                    }
-
-                    return Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withAlpha(51),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(
-                            Icons.waving_hand,
-                            color: Colors.white,
-                            size: 32,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Welcome, $userName!',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                DateFormat('EEEE, dd MMMM yyyy')
-                                    .format(DateTime.now()),
-                                style: const TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-              ),
-
               // Section Title
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -170,7 +116,7 @@ class _HomePageState extends State<HomePage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
-                      'Tenants',
+                      'Activity History',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -256,15 +202,12 @@ class _HomePageState extends State<HomePage> {
                                       radius: 28,
                                       backgroundColor:
                                           AppTheme.primaryBlue.withAlpha(26),
-                                      child: Text(
-                                        tenant.name[0],
-                                        style: const TextStyle(
-                                          color: AppTheme.primaryBlue,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 20,
+                                      child: const Icon(
+                                        Icons.water_drop,  // ← Water droplet!
+                                        color: AppTheme.primaryBlue,
+                                        size: 28,
                                         ),
                                       ),
-                                    ),
                                     const SizedBox(width: 16),
 
                                     // Tenant Info
@@ -324,13 +267,6 @@ class _HomePageState extends State<HomePage> {
                                         ],
                                       ),
                                     ),
-
-                                    // Arrow Icon
-                                    const Icon(
-                                      Icons.arrow_forward_ios,
-                                      size: 16,
-                                      color: AppTheme.textLight,
-                                    ),
                                   ],
                                 ),
                               ),
@@ -381,23 +317,53 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
         bottomNavigationBar: BottomNavigationBar(
-          currentIndex: _selectedIndex,
-          onTap: _onBottomNavTap,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home),
-              label: 'Home',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.qr_code_scanner),
-              label: 'Scan',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.settings),
-              label: 'Settings',
-            ),
-          ],
-        ),
+  currentIndex: _selectedIndex,
+  onTap: _onBottomNavTap,
+  backgroundColor: Colors.white,
+  selectedItemColor: const Color(0xFF1D4489),
+  unselectedItemColor: Colors.grey,
+  type: BottomNavigationBarType.fixed,
+  items: [
+    BottomNavigationBarItem(
+      icon: SvgPicture.asset(
+        'assets/icon/home.svg',
+        colorFilter: const ColorFilter.mode(Colors.grey, BlendMode.srcIn),
+        width: 24,
+        height: 24,
+      ),
+      activeIcon: SvgPicture.asset(
+        'assets/icon/home.svg',
+        colorFilter: const ColorFilter.mode(Color(0xFF1D4489), BlendMode.srcIn),
+        width: 24,
+        height: 24,
+      ),
+      label: 'Home',
+    ),
+    BottomNavigationBarItem(
+      icon: SvgPicture.asset(
+    'assets/icon/scanner.svg',
+    width: 24,
+    height: 24,
+  ),
+  label: 'Scan',
+),
+    BottomNavigationBarItem(
+      icon: SvgPicture.asset(
+        'assets/icon/setting.svg',
+        colorFilter: const ColorFilter.mode(Colors.grey, BlendMode.srcIn),
+        width: 24,
+        height: 24,
+      ),
+      activeIcon: SvgPicture.asset(
+        'assets/icon/setting.svg',
+        colorFilter: const ColorFilter.mode(Color(0xFF1D4489), BlendMode.srcIn),
+        width: 24,
+        height: 24,
+      ),
+      label: 'Settings',
+    ),
+  ],
+),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: () {
             showQRScannerBottomSheet(context);

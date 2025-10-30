@@ -64,7 +64,7 @@ class SettingsPage extends StatelessWidget {
                         radius: 40,
                         backgroundColor: AppTheme.primaryBlue.withAlpha(51),
                         child: Icon(
-                          Icons.person,
+                          Icons.water_drop,
                           size: 40,
                           color: AppTheme.primaryBlue,
                         ),
