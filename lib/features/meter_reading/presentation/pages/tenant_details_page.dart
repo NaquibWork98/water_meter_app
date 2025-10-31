@@ -57,6 +57,7 @@ class TenantDetailsPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: const Color(0xFFEFF3F8),
         title: const Text('Tenant Details'),
       ),
       body: SingleChildScrollView(
@@ -64,7 +65,7 @@ class TenantDetailsPage extends StatelessWidget {
           children: [
             const SizedBox(height: 16),
             
-            // Profile Section (Name and Status) - Big and Separate
+            // Profile Section (Name and Status)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
@@ -114,25 +115,25 @@ class TenantDetailsPage extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
 
-            // Address Box (Separate)
+            // Address Box
             _buildInfoBox(
               Icons.location_on,
               'Address',
               tenant.location,
             ),
 
-            const SizedBox(height: 8),
+            const SizedBox(height: 0),
 
-            // Phone Box (Separate)
+            // Phone Box 
             _buildInfoBox(
               Icons.phone,
               'Phone Number',
               tenant.phoneNumber ?? 'No phone',
             ),
 
-            const SizedBox(height: 8),
+            const SizedBox(height: 0),
 
             // Email Box (Separate)
             _buildInfoBox(
