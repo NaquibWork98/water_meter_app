@@ -41,7 +41,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFE8F4F8), // Light blue background from Figma
+      backgroundColor: const Color(0xFFE8F4F8),
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthAuthenticated) {
@@ -74,7 +74,7 @@ class _LoginPageState extends State<LoginPage> {
                   children: [
                     // Logo and Title Section
                     Image.asset(
-                      'assets/icon/logo_aquaflow.png',
+                      'assets/icon/logo_meterflow.png',
                       width: 280,
                       height: 120,
                       fit: BoxFit.contain,

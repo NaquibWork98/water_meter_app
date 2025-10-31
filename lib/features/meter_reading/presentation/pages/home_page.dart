@@ -80,7 +80,7 @@ class _HomePageState extends State<HomePage> {
   leading: Padding(
     padding: const EdgeInsets.only(left: 2),
     child: Image.asset(
-      'assets/icon/logo_aquaflow.png',
+      'assets/icon/logo_meterflow.png',
       width: 100,
       fit: BoxFit.contain,
     ),
