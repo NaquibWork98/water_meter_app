@@ -12,7 +12,7 @@ class SettingsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: const Color(0xFFEFF3F8),
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -25,7 +25,7 @@ class SettingsPage extends StatelessWidget {
           style: TextStyle(
             color: Colors.black,
             fontSize: 18,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.bold,
           ),
         ),
         centerTitle: true,
@@ -51,42 +51,61 @@ class SettingsPage extends StatelessWidget {
             }
 
             return ListView(
-              padding: EdgeInsets.zero,
+              padding: const EdgeInsets.all(16),
               children: [
-                // User Profile Section
+                // User Profile Section - Elevated Card with Horizontal Layout
                 Container(
-                  color: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  padding: const EdgeInsets.all(20),
                   child: Column(
                     children: [
-                      // Avatar
-                      CircleAvatar(
-                        radius: 40,
-                        backgroundColor: AppTheme.primaryBlue.withAlpha(51),
-                        child: Icon(
-                          Icons.water_drop,
-                          size: 40,
-                          color: AppTheme.primaryBlue,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      // User Name
-                      Text(
-                        userName,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      // User Email
-                      Text(
-                        userEmail,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[600],
-                        ),
+                      // Profile Picture and Name - Horizontal Layout
+                      Row(
+                        children: [
+                          // Avatar on the left
+                          CircleAvatar(
+                            radius: 32,
+                            backgroundColor: AppTheme.primaryBlue.withAlpha(51),
+                            child: const Icon(
+                              Icons.person,
+                              size: 32,
+                              color: AppTheme.primaryBlue,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          // Name and Email on the right
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                userName,
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                userEmail,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 16),
                       // Edit Profile Button
@@ -101,7 +120,8 @@ class SettingsPage extends StatelessWidget {
                             );
                           },
                           style: OutlinedButton.styleFrom(
-                            side: BorderSide(color: AppTheme.primaryBlue),
+                            side: const BorderSide(color: Color(0xFF2CA0FF)),
+                            backgroundColor: const Color(0xFFEFF3F8),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -110,7 +130,7 @@ class SettingsPage extends StatelessWidget {
                           child: const Text(
                             'Edit Profile',
                             style: TextStyle(
-                              color: AppTheme.primaryBlue,
+                              color: Color(0xFF2CA0FF),
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -120,25 +140,39 @@ class SettingsPage extends StatelessWidget {
                   ),
                 ),
 
+                const SizedBox(height: 16),
+
+                // General Title
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Text(
+                    'General',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+
                 const SizedBox(height: 8),
 
-                // General Section
+                // General Section - Elevated Card (without title inside)
                 Container(
-                  color: Colors.white,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                        child: Text(
-                          'General',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                          ),
-                        ),
-                      ),
                       _buildSettingsTile(
                         icon: Icons.notifications_outlined,
                         title: 'Notifications',
@@ -154,6 +188,7 @@ class SettingsPage extends StatelessWidget {
                       _buildSettingsTile(
                         icon: Icons.language,
                         title: 'Language',
+                        subtitle: 'English',
                         trailing: const Icon(
                           Icons.arrow_forward_ios,
                           size: 16,
@@ -189,11 +224,10 @@ class SettingsPage extends StatelessWidget {
                   ),
                 ),
 
-                const SizedBox(height: 32),
+                const SizedBox(height: 24),
 
-                // Logout Button
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                // Logout Button - Centered, Outside White Box, Bold
+                Center(
                   child: SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
@@ -206,11 +240,11 @@ class SettingsPage extends StatelessWidget {
                         style: TextStyle(
                           color: Colors.red,
                           fontSize: 16,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                       style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Colors.red),
+                        backgroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -236,16 +270,24 @@ class SettingsPage extends StatelessWidget {
     VoidCallback? onTap,
   }) {
     return ListTile(
-      leading: Icon(
-        icon,
-        color: Colors.grey[700],
-        size: 24,
+      leading: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: Colors.grey[200],
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(
+          icon,
+          color: Colors.grey[700],
+          size: 20,
+        ),
       ),
       title: Text(
         title,
         style: const TextStyle(
           fontSize: 15,
-          fontWeight: FontWeight.w500,
+          fontWeight: FontWeight.bold,
           color: Colors.black,
         ),
       ),
