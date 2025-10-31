@@ -62,135 +62,111 @@ class TenantDetailsPage extends StatelessWidget {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Tenant Info Card
-            Container(
-              margin: const EdgeInsets.all(16),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            const SizedBox(height: 16),
+            
+            // Profile Section (Name and Status) - Big and Separate
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
                 children: [
-                  // Tenant Name
-                  Row(
+                  CircleAvatar(
+                    radius: 32,
+                    backgroundColor: AppTheme.primaryBlue.withValues(alpha: 0.1),
+                    child: const Icon(
+                      Icons.person,
+                      color: AppTheme.primaryBlue,
+                      size: 32,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      CircleAvatar(
-                        backgroundColor: AppTheme.primaryBlue.withOpacity(0.1),
-                        child: const Icon(
-                          Icons.person,
-                          color: AppTheme.primaryBlue,
+                      Text(
+                        tenant.name,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            tenant.name,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          tenant.status,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.orange[700],
+                            fontWeight: FontWeight.w500,
                           ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.orange.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              tenant.status,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.orange[700],
-                              ),
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ],
-                  ),
-                  
-                  const SizedBox(height: 20),
-                  
-                  // Address
-                  _buildInfoRow(
-                    Icons.location_on,
-                    'Address',
-                    tenant.location,
-                  ),
-                  
-                  const SizedBox(height: 16),
-                  
-                  // Phone
-                  _buildInfoRow(
-                    Icons.phone,
-                    'Phone Number',
-                    tenant.phoneNumber ?? 'No phone',
-                  ),
-                  
-                  const SizedBox(height: 16),
-                  
-                  // Email
-                  _buildInfoRow(
-                    Icons.email,
-                    'Email',
-                    tenant.email,
                   ),
                 ],
               ),
             ),
 
-            // Meter Reading History
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
+            const SizedBox(height: 8),
+
+            // Address Box (Separate)
+            _buildInfoBox(
+              Icons.location_on,
+              'Address',
+              tenant.location,
+            ),
+
+            const SizedBox(height: 8),
+
+            // Phone Box (Separate)
+            _buildInfoBox(
+              Icons.phone,
+              'Phone Number',
+              tenant.phoneNumber ?? 'No phone',
+            ),
+
+            const SizedBox(height: 8),
+
+            // Email Box (Separate)
+            _buildInfoBox(
+              Icons.email,
+              'Email',
+              tenant.email,
+            ),
+
+            const SizedBox(height: 20),
+
+            // Meter Reading History title
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
                     'Meter Reading History',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  
-                  // History items with navigation
-                  ...readingHistory.map((reading) {
-                    return _buildHistoryItem(
-                      context,
-                      reading,
-                      tenant,
-                    );
-                  }).toList(),
-                ],
+                ),
               ),
-            ),
+            const SizedBox(height: 16),
+
+            // History items with navigation
+            ...readingHistory.map((reading) {
+              return _buildHistoryItem(
+                context,
+                reading,
+                tenant,
+              );
+            }).toList(),
 
             const SizedBox(height: 20),
 
@@ -227,43 +203,64 @@ class TenantDetailsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String label, String value) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        CircleAvatar(
-          radius: 20,
-          backgroundColor: AppTheme.primaryBlue.withOpacity(0.1),
-          child: Icon(
-            icon,
-            size: 20,
-            color: AppTheme.primaryBlue,
+  Widget _buildInfoBox(IconData icon, String label, String value) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
           ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppTheme.textLight,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: AppTheme.textDark,
-                ),
-              ),
-            ],
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Square icon container
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: AppTheme.primaryBlue.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8), // Square with rounded corners
+            ),
+            child: Icon(
+              icon,
+              size: 20,
+              color: AppTheme.primaryBlue,
+            ),
           ),
-        ),
-      ],
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: AppTheme.textDark,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -274,11 +271,23 @@ class TenantDetailsPage extends StatelessWidget {
   ) {
     // Format the date
     final monthNames = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December'
     ];
-    final month = '${monthNames[reading.timestamp.month - 1]} ${reading.timestamp.year}';
-    final date = '${reading.timestamp.day.toString().padLeft(2, '0')}/${reading.timestamp.month.toString().padLeft(2, '0')}/${reading.timestamp.year}';
+    final month =
+        '${monthNames[reading.timestamp.month - 1]} ${reading.timestamp.year}';
+    final date =
+        '${reading.timestamp.day.toString().padLeft(2, '0')}/${reading.timestamp.month.toString().padLeft(2, '0')}/${reading.timestamp.year}';
 
     return GestureDetector(
       onTap: () {
@@ -294,11 +303,18 @@ class TenantDetailsPage extends StatelessWidget {
         );
       },
       child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
+        margin: const EdgeInsets.only(left: 16, right: 16, bottom: 12),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: AppTheme.lightGray,
+          color: Colors.white,
           borderRadius: BorderRadius.circular(8),
+          boxShadow: [  // ← Add this
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,

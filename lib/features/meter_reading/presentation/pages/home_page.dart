@@ -11,8 +11,7 @@ import '../bloc/meter_reading_state.dart';
 import 'qr_scanner_page.dart';
 import 'settings_page.dart';
 import 'tenant_details_page.dart';
-import '../widgets/app_bottom_nav.dart'; // ← Import the widget
-
+import '../widgets/app_bottom_nav.dart'; 
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -74,35 +73,37 @@ class _HomePageState extends State<HomePage> {
       },
       child: Scaffold(
         appBar: AppBar(
-          backgroundColor: Colors.white,
-          elevation: 0,
-          leadingWidth: 160, // ← Increased from 140
-          leading: Padding(
-            padding: const EdgeInsets.only(left: 8, top: 0, bottom: 0),
-            child: Image.asset(
-              'assets/icon/logo_aquaflow.png',
-              width: 120, // ← Increased from 100
-              height: 120, // ← Increased from 100
-              fit: BoxFit.contain,
-            ),
-          ),
-          title: BlocBuilder<AuthBloc, AuthState>(
-            builder: (context, state) {
-              String userName = 'User';
-              if (state is AuthAuthenticated) {
-                userName = state.user.name;
-              }
-              return Text(
-                'Welcome, $userName!',
-                style: const TextStyle(
-                  color: AppTheme.textDark,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              );
-            },
-          ),
+  backgroundColor: const Color(0xFFEFF3F8),
+  elevation: 0,
+  toolbarHeight: 100,
+  leadingWidth: 120,
+  leading: Padding(
+    padding: const EdgeInsets.only(left: 2),
+    child: Image.asset(
+      'assets/icon/logo_aquaflow.png',
+      width: 100,
+      fit: BoxFit.contain,
+    ),
+  ),
+  titleSpacing: -30,
+  title: BlocBuilder<AuthBloc, AuthState>(
+    builder: (context, state) {
+      String userName = 'User';
+      if (state is AuthAuthenticated) {
+        userName = state.user.name;
+      }
+      return Text(
+        'Welcome, $userName!',
+        style: const TextStyle(
+          color: AppTheme.textDark,
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
         ),
+      );
+    },
+  ),
+),
+
         body: RefreshIndicator(
           onRefresh: () async {
             context.read<MeterReadingBloc>().add(AllTenantsRequested());
@@ -300,7 +301,7 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
         ),
-        bottomNavigationBar: AppBottomNav( // ← Use the widget here
+        bottomNavigationBar: AppBottomNav(
           currentIndex: _selectedIndex,
           onTap: _onBottomNavTap,
         ),
