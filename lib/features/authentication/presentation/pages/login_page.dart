@@ -84,7 +84,7 @@ class _LoginPageState extends State<LoginPage> {
                     
                     // App Name
                     const Text(
-                      'AquaFlow',
+                      'MeterFlow',
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
