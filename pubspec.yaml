@@ -95,11 +95,9 @@ flutter:
 
   # Fonts
   fonts:
-     - family: Inter
-       fonts:
-       - asset: assets/fonts/Inter-VariableFont.ttf
-  #       - asset: assets/fonts/Poppins-Bold.ttf
-  #         weight: 700
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-VariableFont.ttf
 
 flutter_native_splash:
   color: "#0E2738" 

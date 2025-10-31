@@ -14,7 +14,7 @@ class AppTheme {
   static ThemeData lightTheme = ThemeData(
     useMaterial3: true,
     primaryColor: primaryBlue,
-    scaffoldBackgroundColor: Colors.white,
+    scaffoldBackgroundColor: const Color(0xFFEFF3F8),
     fontFamily: 'Inter',
     colorScheme: ColorScheme.fromSeed(
       seedColor: primaryBlue,

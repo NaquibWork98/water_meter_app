@@ -11,7 +11,7 @@ import '../bloc/meter_reading_state.dart';
 import 'qr_scanner_page.dart';
 import 'settings_page.dart';
 import 'tenant_details_page.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import '../widgets/app_bottom_nav.dart'; // ← Import the widget
 
 
 class HomePage extends StatefulWidget {
@@ -74,70 +74,54 @@ class _HomePageState extends State<HomePage> {
       },
       child: Scaffold(
         appBar: AppBar(
-  backgroundColor: Colors.white,
-  elevation: 0,
-  leadingWidth: 140,
-  leading: Padding(
-    padding: const EdgeInsets.only(left: 8, top: 0, bottom: 0), // Adjust vertical padding
-    child: Image.asset(
-      'assets/icon/logo_aquaflow.png',
-      width: 100,
-      height: 100,
-      fit: BoxFit.contain,
-    ),
-  ),
-  title: BlocBuilder<AuthBloc, AuthState>(
-    builder: (context, state) {
-      String userName = 'User';
-      if (state is AuthAuthenticated) {
-        userName = state.user.name;
-      }
-      return Text(
-        'Welcome, $userName!',
-        style: const TextStyle(
-          color: AppTheme.textDark,
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
+          backgroundColor: Colors.white,
+          elevation: 0,
+          leadingWidth: 160, // ← Increased from 140
+          leading: Padding(
+            padding: const EdgeInsets.only(left: 8, top: 0, bottom: 0),
+            child: Image.asset(
+              'assets/icon/logo_aquaflow.png',
+              width: 120, // ← Increased from 100
+              height: 120, // ← Increased from 100
+              fit: BoxFit.contain,
+            ),
+          ),
+          title: BlocBuilder<AuthBloc, AuthState>(
+            builder: (context, state) {
+              String userName = 'User';
+              if (state is AuthAuthenticated) {
+                userName = state.user.name;
+              }
+              return Text(
+                'Welcome, $userName!',
+                style: const TextStyle(
+                  color: AppTheme.textDark,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              );
+            },
+          ),
         ),
-      );
-    },
-  ),
-),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          context.read<MeterReadingBloc>().add(AllTenantsRequested());
-        },
+        body: RefreshIndicator(
+          onRefresh: () async {
+            context.read<MeterReadingBloc>().add(AllTenantsRequested());
+          },
           child: Column(
             children: [
               // Section Title
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Activity History',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.textDark,
-                      ),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Activity History',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.textDark,
                     ),
-                    BlocBuilder<MeterReadingBloc, MeterReadingState>(
-                      builder: (context, state) {
-                        if (state is TenantsLoaded) {
-                          return Text(
-                            '${state.tenants.length} total',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: AppTheme.textLight,
-                            ),
-                          );
-                        }
-                        return const SizedBox.shrink();
-                      },
-                    ),
-                  ],
+                  ),
                 ),
               ),
 
@@ -203,11 +187,11 @@ class _HomePageState extends State<HomePage> {
                                       backgroundColor:
                                           AppTheme.primaryBlue.withAlpha(26),
                                       child: const Icon(
-                                        Icons.water_drop,  // ← Water droplet!
+                                        Icons.water_drop,
                                         color: AppTheme.primaryBlue,
                                         size: 28,
-                                        ),
                                       ),
+                                    ),
                                     const SizedBox(width: 16),
 
                                     // Tenant Info
@@ -316,54 +300,10 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
         ),
-        bottomNavigationBar: BottomNavigationBar(
-  currentIndex: _selectedIndex,
-  onTap: _onBottomNavTap,
-  backgroundColor: Colors.white,
-  selectedItemColor: const Color(0xFF1D4489),
-  unselectedItemColor: Colors.grey,
-  type: BottomNavigationBarType.fixed,
-  items: [
-    BottomNavigationBarItem(
-      icon: SvgPicture.asset(
-        'assets/icon/home.svg',
-        colorFilter: const ColorFilter.mode(Colors.grey, BlendMode.srcIn),
-        width: 24,
-        height: 24,
-      ),
-      activeIcon: SvgPicture.asset(
-        'assets/icon/home.svg',
-        colorFilter: const ColorFilter.mode(Color(0xFF1D4489), BlendMode.srcIn),
-        width: 24,
-        height: 24,
-      ),
-      label: 'Home',
-    ),
-    BottomNavigationBarItem(
-      icon: SvgPicture.asset(
-    'assets/icon/scanner.svg',
-    width: 24,
-    height: 24,
-  ),
-  label: 'Scan',
-),
-    BottomNavigationBarItem(
-      icon: SvgPicture.asset(
-        'assets/icon/setting.svg',
-        colorFilter: const ColorFilter.mode(Colors.grey, BlendMode.srcIn),
-        width: 24,
-        height: 24,
-      ),
-      activeIcon: SvgPicture.asset(
-        'assets/icon/setting.svg',
-        colorFilter: const ColorFilter.mode(Color(0xFF1D4489), BlendMode.srcIn),
-        width: 24,
-        height: 24,
-      ),
-      label: 'Settings',
-    ),
-  ],
-),
+        bottomNavigationBar: AppBottomNav( // ← Use the widget here
+          currentIndex: _selectedIndex,
+          onTap: _onBottomNavTap,
+        ),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: () {
             showQRScannerBottomSheet(context);
